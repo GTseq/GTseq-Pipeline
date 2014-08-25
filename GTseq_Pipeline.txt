@@ -1,0 +1,91 @@
+******GTseq Bioinformatic genotyping pipeline*******
+
+
+1- Split raw fastq sequence file into individual fastq files using dual index sequences.
+Example:
+	-First use grep to split into plates using the i7 index sequence bases
+		$ grep -A3 '^@HISEQ.*:GGCTAC' Lane2.fastq | grep -v '^--$' > i20_plate0123.fastq &
+			Note: Using the "&" after each line in the shell script will allow the commands to run simultaneously.
+		
+	-Next use grep to split plate fastq files into individual fastq files using the i5 index sequence.
+		$ grep -A3 '^@HISEQ.*ATTCCG$' i20_plate123.fastq | grep -v '^--$' > Individuals/i20_90_P0123_IndividualID.fastq &
+			Again, using the "&" after each line of the shell script will allow the commands to run simulataneously.
+			I recommend naming each individual using the example convention "i7index_samplenumber_PlateID_IndividualID.fastq".
+			This allows individual information to be split in spreadsheets or text files using the underscore (_) as a delimiter. 
+			
+2- Optional: Test plate fastq sequence files for the presence of forward primers and probes using the GTseq_SeqTest.pl script.
+	This script counts the occurrence of each forward primer sequences, in-silico probe sequences, and when both occur within 
+	the same sequence read.  This can help identify primers that create large numbers of artifact sequences.  
+	
+Example:
+	First use the GTseq_HashSeqs.pl script on plate .fastq files.  This script collects and counts unique reads within the fastq file and reduces
+	the compute time for the GTseq_SeqTest.pl script.
+		$ perl GTseq_HashSeqs.pl i20_plate123.fastq > i20_plate123.hash
+		
+	Next use the GTseq_SeqTest.pl script by supplying a tab delimited text file containing loci name, forward primer sequence, allele 1 probe,
+	and allele 2 probe.
+		input files: 
+		
+		AssayInfo.txt file...
+		LocusName1	ACTGTGCCCGTTACCCGACC	TGCAATGAAACTGAA	TGCAATTAAACTGAA
+		LocusName2	.....
+		
+		*Note: Probe sequences can contain square bracketed bases to include known variations within the in-silico probe.  
+		 Example: LocusName1	ACTGTGCCCGTTACCCGACC	TGCAATGAAAC[TG]GAA	TGCAATTAAAC[TG]GAA
+		
+		.hash file:
+		>;1;1200
+		ACTGCAAACGCAAATGTGTCATAGCACAGCCCCTGTGGGACACCCTTTATTTACATAGGTACTACATGTGTGACTATACATACCTGGGGATACTAAAA
+		>;2;1175
+		ATCTATATACTGCACACCCCTGAGACGGATGACCTGACCCACTAAAATGTTATATATACTAATAACTAGACGTACGTTGGGTAGATCATACTGTGTAC
+		>;3;1172
+		ATCT............
+		
+		$ perl GTseq_SeqTest.pl Primer-Probe_input.txt i20_plate123.hash > i20_plate123.seqtest.csv
+		
+		Output:
+		LocusName1,3096,2609,2367
+		LocusName2,32252,27475,25867
+		LocusName3,34435,34826,33213
+		LocusName4,18875,18934,18049
+		LocusName5,2349,2430,2210
+		LocusName6,11217,11378,10510
+
+3- Genotype individuals using GTseq_Genotyper.pl script.
+	Supply Loci information file containing locus names, allele names, and in-silico probe sequences in .csv format.
+Example: LocusInfo.csv
+	LocusName1,C,T,ATTGCCCATGCACA,ATTGCCTATGCACA
+	LocusName2,G,C,TTCCTAGACGTCACA,TTCCTACACGTCACA
+	.....
+	
+	*Note: Probe sequences can contain square bracketed bases to include known variations within the in-silico probe.  
+	 Example: LocusName1,G,T,TGCAATGAAAC[TG]GAA,TGCAATTAAAC[TG]GAA
+
+	
+	$ perl GTseq_Genotyper.pl LocusInfo.csv i20_90_P0123_IndividualID.fastq > i20_90_P0123_IndividualID.genos &
+	
+	Output: csv file containing read counts for each allele, the A1/A2 ratio, Genotype, and Genotype class.
+	LocusName1,A=19,T=14,1.35714285714286,AT,HET
+	LocusName2,A=1,G=238,0.00420168067226891,GG,A2HOM
+	LocusName3,T=0,C=305,0.000327868852459016,CC,A2HOM
+	LocusName4,A=78,T=70,1.11428571428571,AT,HET
+	LocusName5,A=10,G=8,1.25,AG,HET
+	LocusName6,T=108,G=0,1080,TT,A1HOM
+
+	Note: Output file name must identical to individual fastq file except that the .fastq extension is changed to ".genos".
+	This allows the next script to generate summary statistics.
+	
+4- Compile genotypes from individual .genos files to a single .csv file.
+	This script collects genotypes for all individuals at all loci and provides summary statistics for each individual.
+	$ perl GTseq_GenoCompile.pl > Library_Genotypes.csv
+	
+	Output:
+	SampleID,Raw Reads,On-Target Reads,%On-target,%Genotypes,LocusName1,LocusName2,LocusName3,....
+	IndividualID1,50152,30171,60.1,98.7,GT,AA,AT,GG,AA,....
+	IndividualID2,......
+	.....
+	
+5- Optional: Compile read count data for each sample at each locus.
+	This script collects counts at each locus for each individual and provides summary statistics for each individual.
+	This information can be used to examine the uniformity of multiplex PCR amplification.
+	$ perl GTseq_GenoCompile_Counts.pl > Library_Counts.csv
