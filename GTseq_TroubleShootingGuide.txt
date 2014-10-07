@@ -1,0 +1,128 @@
+***GTseq Set-up and TroubleShooting guide***
+
+A test plate of samples should be run with GTseq primers in order to determine if the technique is working properly.
+1- Primers that produce large numbers of artefact sequences can be identified and either modified or eliminated from the panel.
+2- In-silico probe sequences can be modified in order to generate proper genotypes.
+
+**Test primer/probe specificity**
+1-Split the test plate samples from the raw fastq data.
+	Example: $ grep -A3 '^@HISEQ.*:GGCTAC' Lane2.fastq | grep -v '^--$' > i20_testPlate.fastq &
+2-Hash Sequences from test plate.
+	Example: $ perl GTseq_HashSeqs.pl i20_testPlate.fastq > testPlate.hash
+3-Use the GTseq_SeqTest.pl script by supplying a tab delimited text file containing loci name, forward primer sequence, allele 1 probe,
+	and allele 2 probe.
+	Note: The script checks for both the supplied sequence and the reverse complement of the in-silico probes.
+	
+		input files: 
+		AssayInfo.txt file...
+		LocusName1	ACTGTGCCCGTTACCCGACC	TGCAATGAAACTGAA	TGCAATTAAACTGAA
+		LocusName2	.....
+		
+		*Note: Probe sequences can contain square bracketed bases to include known variations within the in-silico probe.  
+		 Example: LocusName1	ACTGTGCCCGTTACCCGACC	TGCAATGAAAC[TG]GAA	TGCAATTAAAC[TG]GAA
+		
+		.hash file:
+		>;1;1200
+		ACTGCAAACGCAAATGTGTCATAGCACAGCCCCTGTGGGACACCCTTTATTTACATAGGTACTACATGTGTGACTATACATACCTGGGGATACTAAAA
+		>;2;1175
+		ATCTATATACTGCACACCCCTGAGACGGATGACCTGACCCACTAAAATGTTATATATACTAATAACTAGACGTACGTTGGGTAGATCATACTGTGTAC
+		>;3;1172
+		ATCT............
+		
+		$ perl GTseq_SeqTest.pl Primer-Probe_input.txt i20_plate123.hash > i20_plate123.seqtest.csv
+		
+		Output:
+		LocusName1,3096,2609,2367
+		LocusName2,32252,27475,25867
+		LocusName3,34435,34826,33213
+		LocusName4,18875,18934,18049
+		LocusName5,2349,2430,2210
+		LocusName6,11217,11378,10510
+		
+		*Note the 3 numbers of occurrences of each primer, probe, and both combinations should be roughly equal.  Large discrepancies can indicate
+		artifact sequences, unaccounted for in-silico probe variations, or an in-silico probe sequence that's not specific to the target amplicon.
+		
+		Example 1: Artifact sequences.
+		LocusName1,325096,2609,2367
+		
+		Example 2: Unaccounted for in-silico probe variation or possibly entirely off-target amplification.
+		LocusName2,32252,0,0
+		
+		Example 3: in-silico probe not specific enough.
+		LocusName3,34435,3400826,33213
+		
+		
+
+**Test for in-silico probe specificity**
+1- Run genotyping pipeline.
+	Supply Loci information file containing locus names, allele names, and in-silico probe sequences in .csv format.
+	
+	Example: LocusInfo.csv
+	LocusName1,C,T,ATTGCCCATGCACA,ATTGCCTATGCACA
+	LocusName2,G,C,TTCCTAGACGTCACA,TTCCTACACGTCACA
+	.....
+	
+	*Note: Probe sequences can contain square bracketed bases to include known variations within the in-silico probe.  
+	 Example: LocusName1,G,T,TGCAATGAAAC[TG]GAA,TGCAATTAAAC[TG]GAA
+
+	
+	$ perl GTseq_Genotyper.pl LocusInfo.csv i20_90_P0123_IndividualID.fastq > i20_90_P0123_IndividualID.genos &
+	
+	Output: csv file containing read counts for each allele, the A1/A2 ratio, Genotype, and Genotype class.
+	LocusName1,A=19,T=14,1.35714285714286,AT,HET
+	LocusName2,A=1,G=238,0.00420168067226891,GG,A2HOM
+	LocusName3,T=0,C=305,0.000327868852459016,CC,A2HOM
+	LocusName4,A=78,T=70,1.11428571428571,AT,HET
+	LocusName5,A=10,G=8,1.25,AG,HET
+	LocusName6,T=108,G=0,1080,TT,A1HOM
+
+	Note: Output file name must identical to individual fastq file except that the .fastq extension is changed to ".genos".
+	This allows the next script to generate summary statistics.
+	
+	**Compile read count data for each sample at each locus.
+	This script collects counts at each locus for each individual and provides summary statistics for each individual.
+	This information can be used to examine the uniformity of multiplex PCR amplification.
+	
+	$ perl GTseq_GenoCompile_Counts.pl > Library_Counts.csv
+	
+	Output:
+	SampleID	Raw 	On-Targ	%OnTar	%GT 	L1	L2	L3	L4	L5	L6	L7	L8
+	Sample1000	87109	47126	54.1	99.5	8	113	27	122	116	110	176	101...
+	Sample2000	85211	46203	54.2	100.0	16	0	26	64	40	37	102	68...
+	Sample3000	39644	20427	51.5	98.4	3	0	5	23	25	24	34	48...
+	...
+	
+	This output can be searched for zeros among sample/loci combinations that otherwise produce genotype data and their individual
+	fastq files can be searched for unaccounted for sequence variations.
+	
+	example: 
+	SampleID	Raw 	On-Targ	%OnTar	%GT 	L1	L2	L3	L4	L5	L6	L7	L8
+	Sample2000	85211	46203	54.2	100.0	16	0	26	64	40	37	102	68...
+	
+	Find forward primer sequence for L2 locus and search Sample2000 fastq file for L2 amplicons.
+	$ grep 'GGAAGAGCTGGAGAACAACGT' Sample2000.fastq
+	AGGAAGAGCTGGAGAACAACGTGGCAGCTAAACTCAGCAAATAAAGAAAGCCTCTGTCAACTGCAAGATCGGAAGAGCACACGTCTGAACTCCAGTCACGG
+	AGGAAGAGCTGGAGAACAACGTGGCAGCTAAACTCAGCAAATAAAGAAAGCCTCTGTCAACTGCAAGATCGGAAGAGCACACGTCTGAACTCCAGTCACGG
+	AGGAAGAGCTGGAGAACAACGTGGCAGCTAAACTCGGCAAATAAAGAAAGCCTCTGTCAACTGCAAGATCGGAAGAGCACACGTCTGAACTACAGACACGG
+	AGGAAGAGCTGGAGAACAACGTGGCAGCTAAACTCGGCAAATAAAGAAAGCCTCTGTCAACTGCAAGATCGGAAGAGCACACGTCTGAACTCCAGTCACGG
+	AGGAAGAGCTGGAGAACAACGTGGCAGCTAAACTCGGCAAATAAAGAAAGCCTCTGTCAACTGCAAGATCGGAAGAGCACACGTCTGAACTCCAGTCACGG
+	AGGAAGAGCTGGAGAACAACGTGGCAGCTAAACTCGGCAAATAAAGAAAGCCTCTGTCAACTGCAAGATCGGAAGAGCACACGTCTGAACTCCAGTCACGG
+	AGGAAGAGCTGGAGAACAACGTGGCAGCTAAACTCAGCAAATAAAGAAAGCCTCTGTCAACTGCAAGATCGGAAGAGCACACGTCTGAACTCCAGTCACGG
+	AGGAAGAGCTGGAGAACAACGTGGCAGCTAAACTCAGCAAATAAAGAAAGCCTCTGTCAACTGCAAGATCGGAAGAGCACACGTCTGAACTCCAGTCACGG
+	AGGAAGAGCTGGAGAACAACGTGGCAGCTAAACTCAGCAAATAAAGAAAGCCTCTGTCAACTGCAAGATCGGAAGAGCACACGTCTGAACTCCAGTCACGG
+	AGGAAGAGCTGGAGAACAACGTGGCAGCTAAACTCAGCAAATAAAGAAAGCCTCTGTCAACTGCAAGATCGGAAGAGCACACGTCTGAACTCCAGTCACGG
+	AGGAAGAGCTGGAGAACAACGTGGCAGCTAAACTCGGCAAATAAAGAAAGCCTCTGTCAACTGCAAGATCGGAAGAGCACACGTCTGAACTCCAGTCACGG
+	AGGAAGAGCTGGAGAACAACGTGGCAGCTAAACTCGGCAAATAAAGAAAGCCTCTGTCAACTGCAAGATCGGAAGAGCACACGTCTGAACTCCAGTCACGG
+	
+	Find probe sequence within amplicons using in-silico probe sequences (A1=CAGCTAAACTCAGCAAAA	A2=CAGCTAAACTCGGCAAAA)
+	In this case Sample2000 has an A>T variation at the last position within the A1 in-silico probe sequence "CAGCTAAACTCAGCAAAT"
+	The input file for the genotyping script can now be modified to account for this variation by either removing the last base
+	"CAGCTAAACTCAGCAAA or by including any observed sequence variations within square brackets "CAGCTAAACTCAGCAAA[AT]".
+
+	The modified in-silico probe(s) can now be tested to make sure the missing allele(s) can now be genotyped
+	$ echo 'L2,A,G,CAGCTAAACTCAGCAAA[AT],CAGCTAAACTCAGCAAA[AT]' | GTseq_Genotyper.pl - Sample2000.fastq
+	L2,A=175,G=0,1750,AA,A1HOM
+	
+	The offending sequence variant has now been accounted for and it will no longer interfere with genotyping at this locus.
+	Also be sure to change the in-silico probe sequences within the input file for the GTSeq_SeqTest.pl script.
+	
