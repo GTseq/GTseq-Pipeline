@@ -51,6 +51,28 @@ A test plate of samples should be run with GTseq primers in order to determine i
 		Example 3: in-silico probe not specific enough.
 		LocusName3,34435,3400826,33213
 		
+4-Use GTseq_Primer-Interaction-Test.pl script using the same .hash file to identify primer interactions in multiplex PCR.  If primers were designed for
+	small amplicon sizes (100 bases or less) then the RC of the reverse primer will exist in "On-Target" reads.  In the case of hetero-dimer artifact sequences
+	the RC of the reverse primer of another locus will be present.  This script identifies combinations of primers within the fastq data and can be useful for 
+	identifying unwanted primer interactions within the multiplex PCR and targeting certain primers for removal or redesign.
+	
+	*Note: use untagged primer sequences for input file.
+		input file:
+		LocusName1	ACTGTGCCCGTTACCCGACC	TGATTGCACTTTAACACCCGA
+		LocusName2	....
+		
+		$perl GTseq_Primer-Interaction-Test.pl input_file.txt i01_PlateID.hash > i01_PlateID_PrimerInteractions.txt
+		
+		output:
+		Combination		Counts
+		LocusName1	LocusName4	855669
+		LocusName1	LocusName2	2
+		LocusName3	LocusName5	83
+		LocusName1	LocusName7	79
+		LocusName3	LocusName6	4
+		LocusName1	LocusName1	79161
+		
+		Output file can be sorted to identify commonly occurring hetero-dimers.
 		
 
 **Test for in-silico probe specificity**
