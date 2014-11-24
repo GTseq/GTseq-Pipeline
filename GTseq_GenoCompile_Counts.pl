@@ -8,6 +8,7 @@ my @Files = `ls *.genos`;
 chomp ( @Files );
 print "Sample,Raw Reads,On-Target Reads,%On-Target,%GT";
 
+#Get assay names and print headers...
 open (FILE1, "<$Files[0]") or die;
 	while (<FILE1>) {
 		my @info1 = split ",", $_;
@@ -18,6 +19,7 @@ close FILE1;
 
 print "\n";
 
+#Gather sample information and print summary data (raw reads, on-target reads, on-target percenatge, genotyping percentace).
 foreach my $samples (@Files) {
 	my $on_target = 0;
 	my $fastq = $samples;
@@ -49,6 +51,7 @@ foreach my $samples (@Files) {
 		my $OT_pct = $on_target/$raw*100;
 		print "$on_target,$OT_pct,$GT_pct,";
 		
+#calculate read counts for each locus and print...
 	open (FILE, "<$samples") or die;
 	while (<FILE>) {
 		chomp;
