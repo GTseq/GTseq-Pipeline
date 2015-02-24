@@ -2,7 +2,6 @@
 # GTseq_SummaryFigures_v2.py
 # by Nate Campbell
 # produce summary figures for GTseq libraries using GTseq_Genotyper_v2 output formatted files.
-# Requires matplotlib module for plotting summary figures.
 # Also outputs summary data in text format for further analysis.
 
 import math
@@ -21,17 +20,17 @@ print(fname)
 
 fout_name = Lname + '_SummaryData.txt'
 f_out = open(fout_name, 'w')
-f_out.write(Lname + '\t')
+f_out.write(Lname)
 f_out.write('GTseq Summary Data\n\n')
 
 pp=PdfPages(fname)
 
-list = listdir( path )
+list1 = listdir( path )
 flist = []
 assaylist = []
 
 #filter for .genos files in directory and add to "flist"...
-for i in list:
+for i in list1:
  if '.genos' in i:
   j = path + '/' + i
   flist.append(j)
@@ -333,6 +332,61 @@ plt.clf()
 
 print('Per-locus Summary\n')
 f_out.write('\nPer-locus Summary\n')
+
+#Gather data from all or first 100 .genos files and plot data from all loci onto a single graph...
+end = 100
+if inds < 100:
+ end = int(inds)
+print('Plotting all loci for %s samples...\nKeepin it 100...\nLots of data points\nThis will take a couple minutes\n' % end)
+for i in range(0, end):
+
+ lineNo = 0
+ g = open(flist[i])
+ for line in g:
+  lineNo = lineNo + 1
+  if lineNo > 1:
+   info = line.split(',')
+   xarr = info[1].split('=')
+   yarr = info[2].split('=')
+   x = int(round(float(xarr[1])))
+   y = int(round(float(yarr[1])))
+   ratio = float(info[3])
+   sum_xy = x + y
+   scale = 75.0
+   if sum_xy < 10:
+    color = 'yellow'
+   elif sum_xy == 0:
+    color = 'yellow'
+   elif ratio > 5:
+    color = 'red'
+   elif ratio < 0.2:
+    color = 'blue'
+   elif ratio < 2 and ratio > 0.5:
+    color = 'purple'
+   else:
+    color = 'yellow'
+   plt.scatter(x, y, c='none', s=scale, label=color,alpha=0.4, edgecolors=color)
+
+plt.grid(True)
+plt.axis([-5, 500, -5, 500])
+plt.plot([0, 10], [10, 0], 'y-', linewidth=2.0)
+plt.plot([8, 10000], [2, 2000], 'r-', linewidth=2.0)
+plt.plot([2000, 2], [10000, 8], 'b-', linewidth=2.0)
+plt.plot([5, 10000], [5, 10000], 'm-', linewidth=2.0)
+plt.plot([6.6, 10000], [3.3, 5000], 'k-', linewidth=2.0)
+plt.plot([3.3, 5000], [6.6, 10000], 'k-', linewidth=2.0)
+plt.title(Lname + ': All Loci Plot')
+plt.xlabel('A1 counts')
+plt.ylabel('A2 counts')
+plt.savefig(pp, format='pdf')
+
+plt.axis([-5, 100, -5, 100])
+plt.title(Lname + ': All Loci Plot (Zoom)')
+plt.savefig(pp, format='pdf')
+plt.clf()
+
+print('Done...\n\nNow creating xy plots for each locus...\n')
+
 #Create XY scatter plot of each locus attempted...
 for loci in assaylist:
  xmax = 0
@@ -406,3 +460,5 @@ for loci in assaylist:
 
 pp.close()
 f_out.close()
+summary = 'All done.\nSummary data: %s\tSummary figures: %s'
+print(summary % (fout_name, fname))
