@@ -13,6 +13,9 @@ Example:
 			I recommend naming each individual using the example convention "i7index_samplenumber_PlateID_IndividualID.fastq".
 			This allows individual information to be split in spreadsheets or text files using the underscore (_) as a delimiter. 
 			
+	-Alternatively use the GTseq_BarcodeSplit.py script to split master fastq file directly into individual fastq files using an
+		input file containing individual sample names, PlateID,i7_name,i7_sequence,i5_name,i5_sequence.  This method is slightly
+		faster and runs using a single processor.
 2- Optional: Test plate fastq sequence files for the presence of forward primers and probes using the GTseq_SeqTest.pl script.
 	This script counts the occurrence of each forward primer sequences, in-silico probe sequences, and when both occur within 
 	the same sequence read.  This can help identify primers that create large numbers of artifact sequences.  
