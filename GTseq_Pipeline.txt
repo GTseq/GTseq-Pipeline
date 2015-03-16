@@ -13,9 +13,9 @@ Example:
 			I recommend naming each individual using the example convention "i7index_samplenumber_PlateID_IndividualID.fastq".
 			This allows individual information to be split in spreadsheets or text files using the underscore (_) as a delimiter. 
 			
-	-Alternatively use the GTseq_BarcodeSplit.py script to split master fastq file directly into individual fastq files using an
-		input file containing individual sample names, PlateID,i7_name,i7_sequence,i5_name,i5_sequence.  This method is slightly
-		faster and runs using a single processor.
+	-Alternatively use the GTseq_BarcodeSplit_MP.py script to split master fastq file directly into individual fastq files using an
+		input file containing individual sample names, PlateID,i7_name,i7_sequence,i5_name,i5_sequence.  This method is much
+		faster and utilizes fewer processors.
 2- Optional: Test plate fastq sequence files for the presence of forward primers and probes using the GTseq_SeqTest.pl script.
 	This script counts the occurrence of each forward primer sequences, in-silico probe sequences, and when both occur within 
 	the same sequence read.  This can help identify primers that create large numbers of artifact sequences.  
@@ -54,12 +54,18 @@ Example:
 		LocusName5,2349,2430,2210
 		LocusName6,11217,11378,10510
 
-3- Genotype individuals using GTseq_Genotyper.pl script.
+3- Genotype individuals using GTseq_Genotyper.pl script or GTseq_Genotyper_v2.pl script which allows for count corrections
+	for loci which amplify 
 	Supply Loci information file containing locus names, allele names, and in-silico probe sequences in .csv format.
+	Note: input files must have linux formatted line endings.
 Example: LocusInfo.csv
 	LocusName1,C,T,ATTGCCCATGCACA,ATTGCCTATGCACA
 	LocusName2,G,C,TTCCTAGACGTCACA,TTCCTACACGTCACA
 	.....
+	
+Example2: LocusInfo_v2.csv (requires probe and forward primer sequences and takes allele specific correction values for each locus)
+	LocusName1,C,T,ATTGCCCATGCACA,ATTGCCTATGCACA,CATTCCATGACAATGATTGAAATCTAAAAACAC,0,0
+	LocusName2,G,C,TTCCTAGACGTCACA,TTCCTACACGTCACA,GCCTACTGATAAATGTATGACAGTAATGGA,2,0
 	
 	*Note: Probe sequences can contain square bracketed bases to include known variations within the in-silico probe.  
 	 Example: LocusName1,G,T,TGCAATGAAAC[TG]GAA,TGCAATTAAAC[TG]GAA
@@ -76,11 +82,40 @@ Example: LocusInfo.csv
 	LocusName6,T=108,G=0,1080,TT,A1HOM
 
 	Note: Output file name must identical to individual fastq file except that the .fastq extension is changed to ".genos".
-	This allows the next script to generate summary statistics.
+	This allows the next script to generate summary statistics.  This is not a requirement if using the GTseq_Genotyper_v2.pl
+	script.
+	
+	GTseq_Genotyper_v2.pl output contains more details which are used by the GTseq_Summary_Figures.py script.
+	version 2 output contains identical information to version 1 but also includes a header line containing summary info
+	for that individual sample [file_name,Raw_reads,On-target_reads,On-target_percentage].  Locus specific info is expanded
+	as well [Locus_name,A1counts,A2counts,A1:A2 ratio,Genotype,Genotype_class,A1_correction,A2_correction,read_depth,
+	%On-target(reads w/ fwd primer seq AND probe seq / reads w/ fwd primer seq)*100,percentage of total On-target reads]
+	
+	Example version 2 output:
+	i046_47_P2708_OtsLGRJ14C_2915.fastq,Raw-Reads:387166,On-Target reads:88812,%On-Target:22.9
+	Ots_100884-287,T=110,C=122,0.902,TC,HET,0,0,232,92.4,0.261
+	Ots_101119-381,T=0,C=146,0.001,CC,A2HOM,0,0,146,63.2,0.164
+	Ots_101554-407,C=257,G=0,2570.000,CC,A1HOM,0,0,257,3.7,0.289
+	Ots_101704-143,T=215,G=3,71.667,TT,A1HOM,0,0,218,53.3,0.245
+	Ots_101770-82,G=271,T=0,2710.000,GG,A1HOM,0,0,271,89.4,0.305
+	Ots_102213-210,A=52,G=58,0.897,AG,HET,0,0,110,88.0,0.124
+	Ots_102414-395,A=106,G=1,106.000,AA,A1HOM,0,0,107,93.9,0.120
+	Ots_102457-132,A=86,G=82,1.049,AG,HET,0,0,168,37.5,0.189
+	Ots_102801-308,C=204,A=0,2040.000,CC,A1HOM,0,0,204,72.6,0.230
+
 	
 4- Compile genotypes from individual .genos files to a single .csv file.
 	This script collects genotypes for all individuals at all loci and provides summary statistics for each individual.
 	$ perl GTseq_GenoCompile.pl > Library_Genotypes.csv
+	OR
+	$ perl GTseq_GenoCompile_v2.pl > Library_Genotypes.csv
+
+	*Expanded output capabilities for version 2 script.
+	$ perl GTseq_GenoCompile_v2.pl S 90 > Library_Genotypes.csv  #Outputs SNP genotypes for samples with 90% of genotpyes or greater
+	*3 possible output formats: S = SNP format, C = counts (read depth), N = numeric genotypes ($ARGV[0])
+	*second argument is a genotyping percentage cutoff to output genotypes.  Samples with less than the specified cutoff will 
+		have genotype output for all loci converted to '00' (missing data).
+	**Defaults to SNP output with no cutoff...
 	
 	Output:
 	SampleID,Raw Reads,On-Target Reads,%On-target,%Genotypes,LocusName1,LocusName2,LocusName3,....
@@ -92,3 +127,7 @@ Example: LocusInfo.csv
 	This script collects counts at each locus for each individual and provides summary statistics for each individual.
 	This information can be used to examine the uniformity of multiplex PCR amplification.
 	$ perl GTseq_GenoCompile_Counts.pl > Library_Counts.csv
+	
+6- Optional but highly recomended:  Generate summary figures for library using the GTseq_SummaryFigures_v2.py script.
+	This generates a .pdf file containing summary figures for the library as well as a text document with summary data.
+	Both are very useful in troubleshooting optimizing a solid panel of primers for GTseq.
