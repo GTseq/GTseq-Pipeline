@@ -13,7 +13,7 @@
 # the original output files will need to be deleted to avoid having files with duplicated sequences.
 # Input file 2 is the .fastq file containing the sequences.
 # Output is a set of fastq files for all individuals included in the library named in the format [i7name]_[i5name]_[PlateID]_[SampleID].fastq 
-# This script uses only a single processing thread and was clocked at about 20 minutes to complete barcode splitting for one lane of data.
+# This script uses multiple processors (1 for every 500 samples) and was clocked at about 20 minutes to complete barcode splitting for one lane of data.
 # Speed is faster than grep method while using fewer compute resources.
 # Using this script for barcode splitting and the GTseq_Genotyper_v2.pl script for genotyping allows the GTseq pipeline to be run on a linux
 # desktop computer.  (Raw data to genotypes in less than 1 hour).
