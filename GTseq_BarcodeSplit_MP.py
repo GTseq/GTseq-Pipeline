@@ -96,31 +96,31 @@ def Main():
           print('Process initiated for 3rd set of samples')
           P3.start()
      if len(list4) > 0:
-          P4 = Process(target=split_file(list4))
+          P4 = Process(target=split_file, args=('list4',))
           print('Process initiated for 4th set of samples')
           P4.start()
      if len(list5) > 0:
-          P5 = Process(target=split_file(list5))
+          P5 = Process(target=split_file, args=('list5',))
           print('Process initiated for 5th set of samples')
           P5.start()
      if len(list6) > 0:
-          P6 = Process(target=split_file(list6))
+          P6 = Process(target=split_file, args=('list6',))
           print('Process initiated for 6th set of samples')
           P6.start()
      if len(list7) > 0:
-          P7 = Process(target=split_file(list7))
+          P7 = Process(target=split_file, args=('list7',))
           print('Process initiated for 7th set of samples')
           P7.start()
      if len(list8) > 0:
-          P8 = Process(target=split_file(list8))
+          P8 = Process(target=split_file, args=('list8',))
           print('Process initiated for 8th set of samples')
           P8.start()
      if len(list9) > 0:
-          P9 = Process(target=split_file(list9))
+          P9 = Process(target=split_file, args=('list9',))
           print('Process initiated for 9th set of samples')
           P9.start()
      if len(list10) > 0:
-          P10 = Process(target=split_file(list10))
+          P10 = Process(target=split_file, args=('list10',))
           print('Process initiated for 10th set of samples')
           P10.start()
      print('Keepin it 100!  Your files will be ready shortly...')
