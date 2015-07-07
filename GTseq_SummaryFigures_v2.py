@@ -69,8 +69,8 @@ for loci in assaylist:
  for genos in flist:
   g = open(genos)
   for line in g:
-   if loci in line:
-    info = line.split(',')
+   info = line.split(',')
+   if loci in info[0] and len(info[0]) == len(loci):
     OT_Dict[info[0]] = OT_Dict[info[0]] + float(info[10])
     OTP_Dict[info[0]] = OTP_Dict[info[0]] + float(info[9])
 
@@ -85,8 +85,8 @@ for loci in assaylist:
  for genos in flist:
   g = open(genos)
   for line in g:
-   if loci in line:
-    info = line.split(',')
+   info = line.split(',')
+   if loci in info[0] and len(info[0]) == len(loci):
     variance = (float(info[10]) - OT_Dict[loci])**2
     variance2 = (float(info[9]) - OTP_Dict[loci])**2
     StDEV_Dict[loci] = StDEV_Dict[loci] + variance
@@ -131,6 +131,7 @@ Sorted_stDEV2 = []
 #Get sorted list of standard deviations for error bars...
 for loci in Sorted_OTkeys:
  Sorted_stDEV.append(StDEV_Dict[loci])
+for loci in Sorted_OTPkeys:
  Sorted_stDEV2.append(StDEV2_Dict[loci])
 
 print('Read Distribution data (sorted by value)\n')
@@ -357,9 +358,9 @@ for i in range(0, end):
     color = 'yellow'
    elif sum_xy == 0:
     color = 'yellow'
-   elif ratio > 5:
+   elif ratio > 10:
     color = 'red'
-   elif ratio < 0.2:
+   elif ratio < 0.1:
     color = 'blue'
    elif ratio < 2 and ratio > 0.5:
     color = 'purple'
@@ -370,8 +371,8 @@ for i in range(0, end):
 plt.grid(True)
 plt.axis([-5, 500, -5, 500])
 plt.plot([0, 10], [10, 0], 'y-', linewidth=2.0)
-plt.plot([8, 10000], [2, 2000], 'r-', linewidth=2.0)
-plt.plot([2000, 2], [10000, 8], 'b-', linewidth=2.0)
+plt.plot([9, 10000], [1, 1000], 'r-', linewidth=2.0)
+plt.plot([1000, 1], [10000, 9], 'b-', linewidth=2.0)
 plt.plot([5, 10000], [5, 10000], 'm-', linewidth=2.0)
 plt.plot([6.6, 10000], [3.3, 5000], 'k-', linewidth=2.0)
 plt.plot([3.3, 5000], [6.6, 10000], 'k-', linewidth=2.0)
@@ -400,8 +401,8 @@ for loci in assaylist:
  for genos in flist:
   g = open(genos)
   for line in g:
-   if loci in line:
-    info = line.split(',')
+   info = line.split(',')
+   if loci in info[0] and len(info[0]) == len(loci):
     size = len(info)
     if size == 11:
      A1_corr = float(info[6])
@@ -421,10 +422,10 @@ for loci in assaylist:
      color = 'yellow'
     elif sum_xy == 0:
      color = 'yellow'
-    elif ratio > 5:
+    elif ratio > 10:
      color = 'red'
      gt_inds = gt_inds + 1
-    elif ratio < 0.2:
+    elif ratio < 0.1:
      color = 'blue'
      gt_inds = gt_inds + 1
     elif ratio < 2 and ratio > 0.5:
@@ -447,8 +448,8 @@ for loci in assaylist:
  plt.grid(True)
  plt.axis([-5, fmax, -5, fmax])
  plt.plot([0, 10], [10, 0], 'y-', linewidth=2.0)
- plt.plot([8, 10000], [2, 2000], 'r-', linewidth=2.0)
- plt.plot([2000, 2], [10000, 8], 'b-', linewidth=2.0)
+ plt.plot([9, 10000], [1, 1000], 'r-', linewidth=2.0)
+ plt.plot([1000, 1], [10000, 9], 'b-', linewidth=2.0)
  plt.plot([5, 10000], [5, 10000], 'm-', linewidth=2.0)
  plt.plot([6.6, 10000], [3.3, 5000], 'k-', linewidth=2.0)
  plt.plot([3.3, 5000], [6.6, 10000], 'k-', linewidth=2.0)
