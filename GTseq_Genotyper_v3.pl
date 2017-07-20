@@ -205,7 +205,7 @@ foreach my $loci (sort keys %F_Primer){
 		$HOM_CT = $HOM_CT + $Allele1_Count{$loci}; $BKGRD_CT = $BKGRD_CT + $Allele2_Count{$loci};}
 	elsif ($ratio <= 0.1) {$geno = "$allele2name{$loci}$allele2name{$loci}"; $genoclass = "A2HOM"; #Allele2 Homozygotes
 		$HOM_CT = $HOM_CT + $Allele2_Count{$loci}; $BKGRD_CT = $BKGRD_CT + $Allele1_Count{$loci};} 
-	elsif ($ratio <= 0.5) {$geno = "00"; $genoclass = "NA"; #In-betweeners
+	elsif ($ratio <= 0.2) {$geno = "00"; $genoclass = "NA"; #In-betweeners
 		$HOM_CT = $HOM_CT + $Allele2_Count{$loci}; $BKGRD_CT = $BKGRD_CT + $Allele1_Count{$loci};}
 	elsif ($ratio <= 2) {$geno = "$allele1name{$loci}$allele2name{$loci}"; $genoclass = "HET";} #Heterozygotes
 	
