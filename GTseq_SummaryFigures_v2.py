@@ -106,7 +106,7 @@ L_AvOTP = 100 / AssayNum
 print('Read Distribution data (sorted by locus name)\n')
 f_out.write('Read Distribution data (sorted by locus name)\n')
 for loci in assaylist:
- plt.bar(left, OT_Dict[loci], width=bar_width, bottom=None, hold=None, 
+ plt.bar(left, OT_Dict[loci], width=bar_width, bottom=None,
  alpha=opacity, yerr=StDEV_Dict[loci], ecolor='black',
  color='b', capsize=1)
  print(loci, OT_Dict[loci], StDEV_Dict[loci])
@@ -140,7 +140,7 @@ f_out.write('\nRead Distribution data (sorted by value)\n')
 left = 0
 Assays = int(AssayNum)
 for x in range(0, Assays):
- plt.bar(left, Sorted_OT[x], width=bar_width, bottom=None, hold=None, 
+ plt.bar(left, Sorted_OT[x], width=bar_width, bottom=None,
  alpha=opacity, yerr=Sorted_stDEV[x], ecolor='black',
  color='green', capsize=1)
  print(Sorted_OTkeys[x], Sorted_OT[x], Sorted_stDEV[x])
@@ -160,7 +160,7 @@ f_out.write('\nPrimer Reads On-Target (reads with forward primer AND probe / rea
 #Create bar graph of percentage (reads with forward primer AND probe / reads with fwd primer)...
 left = 0
 for loci in assaylist:
- plt.bar(left, OTP_Dict[loci], width=bar_width, bottom=None, hold=None, 
+ plt.bar(left, OTP_Dict[loci], width=bar_width, bottom=None,
  alpha=opacity, yerr=StDEV2_Dict[loci], ecolor='black',
  color='b', capsize=1)
  print(loci, OTP_Dict[loci], StDEV2_Dict[loci])
@@ -179,7 +179,7 @@ f_out.write('\nPrimer Reads On-Target (sorted) (reads with forward primer AND pr
 #Create sorted bar graph of percentage (reads with forward primer AND probe / reads with fwd primer)...
 left = 0
 for x in range(0, Assays):
- plt.bar(left, Sorted_OTP[x], width=bar_width, bottom=None, hold=None, 
+ plt.bar(left, Sorted_OTP[x], width=bar_width, bottom=None, 
  alpha=opacity, yerr=Sorted_stDEV2[x], ecolor='black',
  color='red', capsize=1)
  print(Sorted_OTPkeys[x], Sorted_OTP[x], Sorted_stDEV2[x])
